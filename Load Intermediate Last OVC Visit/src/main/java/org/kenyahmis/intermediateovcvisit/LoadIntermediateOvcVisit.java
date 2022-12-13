@@ -28,9 +28,9 @@ public class LoadIntermediateOvcVisit {
         Connection conn = null;
 
         try {
-            String dbURL = rtConfig.get("spark.sink.url");
-            String user = rtConfig.get("spark.sink.user");
-            String pass = rtConfig.get("spark.sink.password");
+            String dbURL = rtConfig.get("spark.ods.url");
+            String user = rtConfig.get("spark.ods.user");
+            String pass = rtConfig.get("spark.ods.password");
             String timeout = rtConfig.get("spark.intermediateQuery.timeout");
             conn = DriverManager.getConnection(dbURL, user, pass);
             if (conn != null) {

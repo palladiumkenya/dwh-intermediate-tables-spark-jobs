@@ -28,14 +28,9 @@ public class LoadIntermediateOtzVisit {
 
         Connection conn = null;
         try {
-            rtConfig.set("spark.sink.url","jdbc:sqlserver://192.168.0.104;encrypt=false;databaseName=ODS");
-            rtConfig.set("spark.sink.user","sa");
-            rtConfig.set("spark.sink.password","&E8@6*i^jMl8");
-            rtConfig.set("spark.intermediateQuery.timeout",7200);
-
-            String dbURL = rtConfig.get("spark.sink.url");
-            String user = rtConfig.get("spark.sink.user");
-            String pass = rtConfig.get("spark.sink.password");
+            String dbURL = rtConfig.get("spark.ods.url");
+            String user = rtConfig.get("spark.ods.user");
+            String pass = rtConfig.get("spark.ods.password");
             String timeout = rtConfig.get("spark.intermediateQuery.timeout");
             conn = DriverManager.getConnection(dbURL, user, pass);
             if (conn != null) {
