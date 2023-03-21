@@ -20,7 +20,6 @@ public class LoadIntermediateOtzVisit {
     public static void main(String[] args) {
         SparkConf conf = new SparkConf();
         conf.setAppName("Load intermediate last otz visits table");
-        conf.setMaster("local");
         SparkSession session = SparkSession.builder()
                 .config(conf)
                 .getOrCreate();
@@ -28,11 +27,6 @@ public class LoadIntermediateOtzVisit {
 
         Connection conn = null;
         try {
-            rtConfig.set("spark.sink.url","jdbc:sqlserver://192.168.0.104;encrypt=false;databaseName=ODS");
-            rtConfig.set("spark.sink.user","sa");
-            rtConfig.set("spark.sink.password","&E8@6*i^jMl8");
-            rtConfig.set("spark.intermediateQuery.timeout",7200);
-
             String dbURL = rtConfig.get("spark.sink.url");
             String user = rtConfig.get("spark.sink.user");
             String pass = rtConfig.get("spark.sink.password");

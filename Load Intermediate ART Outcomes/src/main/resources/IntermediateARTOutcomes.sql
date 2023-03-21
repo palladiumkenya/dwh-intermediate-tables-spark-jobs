@@ -5,6 +5,8 @@ With ARTOutcomes AS (
         DISTINCT
         Patients.PatientID,
         Patients.PatientPK,
+        Patients.PatientPKHash,
+        Patients.PatientIDHash,
         ART.startARTDate,
     YEAR(ART.startARTDate) AS Cohort,
     Exits.ExitReason,

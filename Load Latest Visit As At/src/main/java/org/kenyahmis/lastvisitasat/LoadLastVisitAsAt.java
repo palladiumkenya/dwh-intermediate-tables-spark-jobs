@@ -43,7 +43,7 @@ public class LoadLastVisitAsAt {
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
-            throw new RuntimeException("Failed to run Latest Visit As At  query");
+            throw new RuntimeException("Failed to run Latest Visit As At query");
         } finally {
             try {
                 if (conn != null && !conn.isClosed()) {
