@@ -38,7 +38,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>org.kenyahmis.intermediatepreprefills.LoadIntermediatePrepRefills</mainClass>
+                            <mainClass>org.kenyahmis.intermediatepreprefills.LoadIntermediatePrepLastVisit</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
