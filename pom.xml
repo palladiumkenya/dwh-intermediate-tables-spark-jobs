@@ -9,6 +9,21 @@
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>
+        <module>Load Intermediate ART Outcomes</module>
+        <module>Load Intermediate Baseline Viral Loads</module>
+        <module>Load Intermediate Last OTZ Visit</module>
+        <module>Load Intermediate Last OVC Visit</module>
+        <module>Load Last Patient Encounter</module>
+        <module>Load Last Patient Encounter As At</module>
+        <module>Load Last Pharmacy Dispense Date</module>
+        <module>Load Latest Viral Loads</module>
+        <module>Load Intermediate Last Visit</module>
+        <module>Load Latest Visit As At</module>
+        <module>Load Latest Weight Height</module>
+        <module>Load Ordered Viral Loads</module>
+        <module>Load Pregnancy As At</module>
+        <module>LoadPharmacyDispenseAsAt</module>
+        <module>Pregnancy During ART</module>
         <module>Load Intermediate Encounter HTS Tests</module>
         <module>Load Intermediate PreP Last Visit</module>
         <module>Load Intermediate Prep Refills</module>

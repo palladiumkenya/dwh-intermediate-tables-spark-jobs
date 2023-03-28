@@ -1,9 +1,12 @@
-truncate table dbo.Intermediate_PregnancyDuringART;
-
+IF OBJECT_ID(N'[ODS].[dbo].[Intermediate_PregnancyDuringART]', N'U') IS NOT NULL
+DROP TABLE [ODS].[dbo].[Intermediate_PregnancyDuringART];
+BEGIN
 With PregnancyDuringART AS (
     SELECT
         PatientID ,
         PatientPK ,
+        PatientIDHash,
+        PatientPKHash,
         SiteCode,
         MAX(PregnantDuringART)AS PregnantDuringART,
         X.VisitDate,
@@ -14,24 +17,28 @@ With PregnancyDuringART AS (
             SELECT DISTINCT
                 Patients.PatientID ,
                 Patients.PatientPK ,
+                Patients.PatientIDHash,
+                Patients.PatientPKHash,
                 Patients.SiteCode,
                 VisitDate,
                 StartARTDate,
                 CASE WHEN VisitDate >= ART.StartARTDate THEN 1 ELSE 0 END AS PregnantDuringART
-            FROM CT_PatientVisits Visits
-                     INNER JOIN CT_Patient Patients ON Visits.PatientID=Patients.PatientID AND Visits.PatientPK=Patients.PatientPK AND Patients.SiteCode=Visits.SiteCode
-                     INNER JOIN CT_ARTPatients ART ON ART.PatientID=Patients.PatientID AND ART.PatientPK=Patients.PatientPK AND Patients.SiteCode=ART.SiteCode
+            FROM [ODS].[DBO].[CT_PatientVisits] Visits
+                INNER JOIN [ODS].[DBO].[CT_Patient] Patients ON  Visits.PatientPK=Patients.PatientPK AND Patients.SiteCode=Visits.SiteCode
+                INNER JOIN [ODS].[DBO].[CT_ARTPatients] ART ON ART.PatientPK=Patients.PatientPK AND Patients.SiteCode=ART.SiteCode
             WHERE Visits.Pregnant = 'Yes' OR Visits.Pregnant = 'Y'
 
         ) X
-    GROUP BY PatientID ,PatientPK ,SiteCode,VisitDate,SiteCode,StartARTDate
+    GROUP BY PatientID ,PatientPK ,PatientIDHash,PatientPKHash,SiteCode,VisitDate,SiteCode,StartARTDate
 )
-
-insert into dbo.Intermediate_PregnancyDuringART
 Select
     PregnancyDuringART.PatientID ,
     PregnancyDuringART.PatientPK ,
+    PregnancyDuringART.PatientPKHash,
+    PregnancyDuringART.PatientIDHash,
     PregnancyDuringART.SiteCode,
     PregnancyDuringART.PregnantDuringART,
     PregnancyDuringART.LoadDate
+INTO [ODS].[dbo].[Intermediate_PregnancyDuringART]
 FROM  PregnancyDuringART
+END
