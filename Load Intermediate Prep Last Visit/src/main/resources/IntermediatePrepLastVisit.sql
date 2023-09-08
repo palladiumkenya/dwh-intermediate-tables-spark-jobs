@@ -5,7 +5,7 @@ BEGIN
 
 with source_data as (
     select
-        distinct row_number() over (partition by PrepNumber, SiteCode, PatientPK order by VisitDate desc) as num,
+        distinct row_number() over (partition by SiteCode, PatientPK order by VisitDate desc) as num,
                  PatientPk,
                  PatientPKHash,
                  SiteCode,
@@ -57,13 +57,13 @@ with source_data as (
     TreatedForHepC,
     NextAppointment,
     ClinicalNotes
-from dbo.PrEP_Visits
+from ODS.DBO.PrEP_Visits
 where VisitDate is not null
     )
 select
-    source_data.*,
+    source_data.*,cast( '' as nvarchar(100)) PatientPKHash,
     cast(getdate() as date) as LoadDate
-into [dbo].[Intermediate_PrepLastVisit]
+into  [ODS].[dbo].[Intermediate_PrepLastVisit]
 from  source_data
 where num = 1;
 

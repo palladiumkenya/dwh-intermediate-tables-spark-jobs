@@ -22,6 +22,7 @@ With LastPatientEncounterAsAt AS (
     FROM ODS.dbo.Intermediate_LastVisitAsAt  LastVisit
              FULL JOIN ODS.dbo.Intermediate_PharmacyDispenseAsAtDate  LastDispense
                        ON   LastVisit.SiteCode=LastDispense.SiteCode AND LastVisit.PatientPK =LastDispense.PatientPK
+
 )
 Select LastPatientEncounterAsAt.*
 INTO [ODS].[dbo].[Intermediate_LastPatientEncounterAsAt]

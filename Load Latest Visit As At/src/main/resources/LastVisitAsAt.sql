@@ -15,6 +15,7 @@ With LastVisitAsAt AS (
     FROM [ODS].[dbo].[CT_PatientVisits]
     )
 Select LastVisitAsAt.*
+
 INTO [ODS].[dbo].[Intermediate_LastVisitAsAt]
 from LastVisitAsAt
 where NUM=1 and VisitDateAsAt<=EOMONTH(DATEADD(mm,-1,GETDATE()))

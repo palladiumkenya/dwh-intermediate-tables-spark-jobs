@@ -5,12 +5,12 @@ BEGIN
 with source_data as (
     select
         /* partition for the same SiteCode, PatientPK, TestDate and pick the latest Encounter ID */
-        row_number() over (partition by SiteCode,PatientPK,TestDate order by EncounterId desc) as num,
+        row_number() over (partition by SiteCode,PatientPK,TestDate,TestType order by EncounterId desc) as num,
         TestDate,
         EncounterId,
         SiteCode,
         PatientPK,
-        cast( '' as nvarchar(100)) PatientPKHash,
+        PatientPKHash,
         EMR,
         Project,
         DateExtracted,
@@ -34,9 +34,9 @@ with source_data as (
       and  TestDate >= cast('2015-01-01' as date) and TestDate <= getdate()
 )
 select
-    source_data.*
-into ODS.dbo.Intermediate_EncounterHTSTests
+    source_data.*,cast(getdate() as date) as LoadDate
+into [ODS].[dbo].[Intermediate_EncounterHTSTests]
 from source_data
-where num = 1
+where num=1
 
 END

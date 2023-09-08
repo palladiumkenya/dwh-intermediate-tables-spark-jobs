@@ -16,6 +16,7 @@ with source_BaseLineViralLoads as (
     TestResult,
    [Emr],
    [Project]
+
 from ODS.dbo.CT_PatientLabs
 where TestName = 'Viral Load'
   and TestName <>'CholesterolLDL (mmol/L)' and TestName <> 'Hepatitis C viral load'
@@ -24,7 +25,7 @@ where TestName = 'Viral Load'
 select
     source_BaseLineViralLoads.*,
     cast(getdate() as date) as LoadDate
-into [ODS].[dbo].[Intermediate_BaseLineViralLoads]
+INTO [ODS].[dbo].[Intermediate_BaseLineViralLoads]
 from source_BaseLineViralLoads
 where rank = 1
 END
