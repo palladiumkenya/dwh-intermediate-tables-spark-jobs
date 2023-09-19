@@ -61,8 +61,7 @@ from ODS.DBO.PrEP_Visits
 where VisitDate is not null
     )
 select
-    source_data.*,cast( '' as nvarchar(100)) PatientPKHash,
-    cast(getdate() as date) as LoadDate
+    source_data.*,cast(getdate() as date) as LoadDate
 into  [ODS].[dbo].[Intermediate_PrepLastVisit]
 from  source_data
 where num = 1;

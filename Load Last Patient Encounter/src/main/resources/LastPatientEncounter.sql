@@ -41,6 +41,8 @@ WITH Pharmacy AS (
          Select
              PatientId,
              PatientPK,
+             PatientIDHash,
+             PatientPKHash,
              sitecode
          from ODS.dbo.CT_ARTPatients
      ),
@@ -62,13 +64,13 @@ WITH Pharmacy AS (
 --compare the results of the Pharmacy and ART above with when date add has been applied for the patients mising  TCAs and pick the greater
      PharmacyART_Computed As (
          SELECT
-             OrderedVisits.PatientID,
-             OrderedVisits.PatientPK,
-             OrderedVisits.PatientIDHash,
-             OrderedVisits.PatientPKHash,
-             OrderedVisits.SiteCode,
-             Case When OrderedVisits.LastVisitART_Pharmacy >=ART_expected_dates_logic.last_visit_plus_30_days Then
-                      OrderedVisits.LastVisitART_Pharmacy Else ART_expected_dates_logic.last_visit_plus_30_days  End As LastEncounterDate,
+             PharmacyART_Visits.PatientID,
+             PharmacyART_Visits.PatientPK,
+             PharmacyART_Visits.PatientIDHash,
+             PharmacyART_Visits.PatientPKHash,
+             PharmacyART_Visits.SiteCode,
+             Case When PharmacyART_Visits.LastVisitART_Pharmacy >=ART_expected_dates_logic.last_visit_plus_30_days Then
+                      PharmacyART_Visits.LastVisitART_Pharmacy Else ART_expected_dates_logic.last_visit_plus_30_days  End As LastEncounterDate,
              NextappointmentDate
          from PharmacyART_Visits
                   left join ART_expected_dates_logic on  PharmacyART_Visits.PatientPk=ART_expected_dates_logic.PatientPk and PharmacyART_Visits.Sitecode=ART_expected_dates_logic.Sitecode
