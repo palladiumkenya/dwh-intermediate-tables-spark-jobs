@@ -28,6 +28,7 @@
         <module>Load Intermediate PreP Last Visit</module>
         <module>Load Intermediate Prep Refills</module>
         <module>Load Intermediate Latest Prep Assessments</module>
+        <module>Load Intermediate latest Obs</module>
     </modules>
 
     <dependencyManagement>
