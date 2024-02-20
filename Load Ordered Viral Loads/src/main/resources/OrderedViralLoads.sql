@@ -21,7 +21,7 @@ with source_OrderedViralLoads as (
 from ODS.dbo.CT_PatientLabs
 where TestName = 'Viral Load'
   and TestName <>'CholesterolLDL (mmol/L)' and TestName <> 'Hepatitis C viral load'
-  and TestResult is not null
+  and TestResult is not null and VOIDED=0
     )
 select
     source_OrderedViralLoads.*,

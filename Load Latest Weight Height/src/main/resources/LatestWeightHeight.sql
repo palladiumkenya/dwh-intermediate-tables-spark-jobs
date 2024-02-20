@@ -15,7 +15,7 @@ with source_LatestWeightHeight as (
         Height,
         VisitBy
     from ODS.dbo.CT_PatientVisits
-    where Weight is not null
+    where Weight is not null and  VOIDED=0
 )
 select
     source_LatestWeightHeight.*,

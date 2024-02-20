@@ -8,9 +8,9 @@ WITH Pharmacy AS (
              SiteCode,
              PatientPK ,
              DispenseDate As LastEncounterDate,
-             Case When DATEDIFF(dd,GETDATE(),ExpectedReturn) >= 365 or ExpectedReturn ='1900-01-01' or  ExpectedReturn is null  THEN DATEADD(dd,30,DispenseDate) ELSE ExpectedReturn End as NextAppointmentDate
+             Case When DATEDIFF(dd,DispenseDate,ExpectedReturn) >= 365 or ExpectedReturn ='1900-01-01' or  ExpectedReturn is null  THEN DATEADD(dd,30,DispenseDate) ELSE ExpectedReturn End as NextAppointmentDate
     FROM ODS.dbo.CT_PatientPharmacy  As LastEncounter
-    where DispenseDate <= EOMONTH(DATEADD(mm,-1,GETDATE()))
+    where DispenseDate <= EOMONTH(DATEADD(mm,-1,GETDATE())) and LastEncounter.VOIDED=0
 ),
 --Pick Expected return and Lastvisit  dates from ARTPatient only if Expected return is <365days and add 30 days to Last visit if it is null
      ART_expected_dates_logic AS (
@@ -21,11 +21,11 @@ WITH Pharmacy AS (
              LastVisit,
              ExpectedReturn,
              CASE
-                 WHEN DATEDIFF(dd,GETDATE(),ExpectedReturn) <= 365 THEN ExpectedReturn Else DATEADD(day, 30, LastVisit)
+                 WHEN DATEDIFF(dd,LastVisit,ExpectedReturn) <= 365 THEN ExpectedReturn Else DATEADD(day, 30, LastVisit)
                  END AS expected_return_on_365,
              case when LastVisit is null Then DATEADD(day, 30, LastVisit) else LastVisit End AS last_visit_plus_30_days
          FROM ODS.dbo.CT_ARTPatients
-         where LastVisit <= EOMONTH(DATEADD(mm,-1,GETDATE()))
+         where LastVisit <= EOMONTH(DATEADD(mm,-1,GETDATE())) and VOIDED=0
      ),
 --Pick latestVisit and TCA from the visits Table
      LatestVisit As (
@@ -35,7 +35,7 @@ WITH Pharmacy AS (
                 VisitDate as LastVisitDate,
                 Case When NextAppointmentDate is NULL THEN DATEADD(dd,30,VisitDate) ELSE NextAppointmentDate End as NextAppointmentDate
          from ODS.dbo.CT_PatientVisits
-         where VisitDate <= EOMONTH(DATEADD(mm,-1,GETDATE()))
+         where VisitDate <= EOMONTH(DATEADD(mm,-1,GETDATE())) and VOIDED=0
      ),
      Patients As (
          Select
@@ -45,6 +45,7 @@ WITH Pharmacy AS (
              PatientPKHash,
              sitecode
          from ODS.dbo.CT_ARTPatients
+         WHERE VOIDED=0
      ),
 --Compare Pharmacy and ART last visits and expected return dates  and Pick the higher of the 2
      PharmacyART_Visits As (
@@ -69,7 +70,7 @@ WITH Pharmacy AS (
              PharmacyART_Visits.PatientIDHash,
              PharmacyART_Visits.PatientPKHash,
              PharmacyART_Visits.SiteCode,
-             Case When PharmacyART_Visits.LastVisitART_Pharmacy >=ART_expected_dates_logic.last_visit_plus_30_days Then
+             Case When PharmacyART_Visits.LastVisitART_Pharmacy >=coalesce(ART_expected_dates_logic.last_visit_plus_30_days, PharmacyART_Visits.LastVisitART_Pharmacy) Then
                       PharmacyART_Visits.LastVisitART_Pharmacy Else ART_expected_dates_logic.last_visit_plus_30_days  End As LastEncounterDate,
              NextappointmentDate
          from PharmacyART_Visits

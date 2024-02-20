@@ -27,6 +27,7 @@ with source_LastOTZVisit as (
         TransitionAttritionReason,
         OutcomeDate
     from ODS.dbo.CT_Otz
+    WHERE  VOIDED=0
 )
 select
 

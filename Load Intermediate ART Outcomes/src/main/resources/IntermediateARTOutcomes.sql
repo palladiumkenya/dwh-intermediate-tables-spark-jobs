@@ -13,6 +13,7 @@ With Exits As (
         ReasonForDeath,
         ReEnrollmentDate
     from ODS.dbo.CT_PatientStatus
+    WHERE VOIDED=0
 ),
      Latestexits As (
          select
@@ -47,25 +48,27 @@ With Exits As (
     WHEN  LatestExits.ExitDate IS NOT NULL and LatestExits.ExitReason not in ('DIED','dead','Death','Died') and  Latestexits.ReEnrollmentDate between  DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0) and DATEADD(MONTH, DATEDIFF(MONTH, -1, GETDATE())-1, -1) THEN 'V'--3
     WHEN  LatestExits.ExitDate IS NOT NULL and LatestExits.ExitReason not in ('DIED','dead','Death','Died') and  Latestexits.EffectiveDiscontinuationDate >=  EOMONTH(DATEADD(mm,-1,GETDATE())) THEN 'V'--4
     WHEN  ART.startARTDate> DATEADD(s,-1,DATEADD(mm, DATEDIFF(m,0,GETDATE()),0)) THEN 'NP'--5
-    WHEN  LatestExits.EffectiveDiscontinuationDate is not null and Latestexits.ReEnrollmentDate is Null Then SUBSTRING(LatestExits.ExitReason,1,1) --6
-    WHEN  LatestExits.ExitDate IS NOT NULL and LatestExits.ExitReason not in ('DIED','dead','Death','Died') and LatestExits.EffectiveDiscontinuationDate between DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0) and DATEADD(MONTH, DATEDIFF(MONTH, -1, GETDATE())-1, -1) THEN SUBSTRING(LatestExits.ExitReason,1,1)--When a TO and LFTU has an discontinuationdate during the reporting Month --7
-    WHEN  LatestExits.ExitDate IS NOT NULL and LatestExits.ExitReason not in ('DIED','dead','Death','Died') and  LastPatientEncounter.NextAppointmentDate > EOMONTH(DATEADD(mm,-1,GETDATE()))  THEN 'V'--8
-    WHEN  DATEDIFF( dd, ISNULL(LastPatientEncounter.NextAppointmentDate,ART.ExpectedReturn), EOMONTH(DATEADD(mm,-1,GETDATE()))) <=30 THEN 'V'-- Date diff btw TCA  and LAst day of Previous month-- must not be late by 30 days -- 9
-    WHEN  ISNULL(LastPatientEncounter.NextAppointmentDate,ART.ExpectedReturn) > EOMONTH(DATEADD(mm,-1,GETDATE()))   Then 'V' --10
+    WHEN  LatestExits.ExitDate IS NOT NULL and LatestExits.ExitReason not in ('DIED','dead','Death','Died') and LatestExits.EffectiveDiscontinuationDate between DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0) and DATEADD(MONTH, DATEDIFF(MONTH, -1, GETDATE())-1, -1) THEN SUBSTRING(LatestExits.ExitReason,1,1)--When a TO and LFTU has an discontinuationdate during the reporting Month --6
+    WHEN  LatestExits.ExitDate IS NOT NULL and LatestExits.ExitReason not in ('DIED','dead','Death','Died') and  LastPatientEncounter.NextAppointmentDate > EOMONTH(DATEADD(mm,-1,GETDATE()))  THEN 'V'--7
+    WHEN  DATEDIFF( dd, LastPatientEncounter.NextAppointmentDate, EOMONTH(DATEADD(mm,-1,GETDATE()))) <=30 THEN 'V'-- Date diff btw TCA  and LAst day of Previous month-- must not be late by 30 days -- 8
+    WHEN  LastPatientEncounter.NextAppointmentDate > EOMONTH(DATEADD(mm,-1,GETDATE()))   Then 'V' --9
+    WHEN  LatestExits.EffectiveDiscontinuationDate is not null and Latestexits.ReEnrollmentDate is Null Then SUBSTRING(LatestExits.ExitReason,1,1) --10
     WHEN LastPatientEncounter.NextAppointmentDate IS NULL THEN 'NV' --11
     ELSE SUBSTRING(LatestExits.ExitReason,1,1)
 END
 AS ARTOutcome,
 	     cast (Patients.SiteCode as nvarchar) As SiteCode,
 		 Patients.Emr,
-		 Patients.Project
-
+		 Patients.Project,
+         Latestexits.ReEnrollmentDate,
+         Latestexits.EffectiveDiscontinuationDate
 	FROM ODS.dbo.CT_Patient Patients
+
 	INNER JOIN ODS.dbo.CT_ARTPatients  ART  ON  Patients.PatientPK=ART.PatientPK and Patients.Sitecode=ART.Sitecode
-	INNER JOIN ODS.dbo.Intermediate_LastPatientEncounter  LastPatientEncounter ON   Patients.PatientPK  =LastPatientEncounter.PatientPK   AND Patients.SiteCode  =LastPatientEncounter.SiteCode
+	Left JOIN ODS.dbo.Intermediate_LastPatientEncounter  LastPatientEncounter ON   Patients.PatientPK  =LastPatientEncounter.PatientPK   AND Patients.SiteCode  =LastPatientEncounter.SiteCode
 	LEFT JOIN  LatestExits   ON  Patients.PatientPK=Latestexits.PatientPK  and Patients.Sitecode=Latestexits.Sitecode
 
-	  WHERE  ART.startARTDate IS NOT NULL
+	  WHERE  ART.startARTDate IS NOT NULL AND  ART.VOIDED=0
 	),
 	LatestUpload AS (
 	select
@@ -80,13 +83,14 @@ AS ARTOutcome,
 		distinct sitecode,
 		 Max(Visitdate) As SiteAbstractionDate
 		 from ODS.dbo.CT_PatientVisits
+		 WHERE VOIDED=0
 		 group by SiteCode
     )
 Select
     ARTOutcomes.PatientID,
     ARTOutcomes.PatientPK,
-    ARTOutcomes.PatientIDHash,
-    ARTOutcomes.PatientPKHash,
+    PatientPKHash,
+    PatientIDHash,
     ARTOutcomes.startARTDate,
     YEAR(ARTOutcomes.startARTDate) AS Cohort,
     ARTOutcomes.ExitReason,
@@ -99,6 +103,8 @@ Select
     ARTOutcomes.Project,
     LatestUpload.DateUploaded,
     LatestVisits.SiteAbstractionDate,
+    ReEnrollmentDate,
+    EffectiveDiscontinuationDate,
     cast(getdate() as date) as LoadDate
 INTO  [ODS].[dbo].[Intermediate_ARTOutcomes]
 from ARTOutcomes

@@ -20,6 +20,7 @@ with source_LasttOVCVisit as (
         OVCExitReason,
         ExitDate
     from ODS.dbo.CT_Ovc
+    WHERE  VOIDED=0
 )
 select
     VisitDate as LatestVisitDate,

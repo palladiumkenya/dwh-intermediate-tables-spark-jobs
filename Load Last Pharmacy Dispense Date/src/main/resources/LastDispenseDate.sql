@@ -13,6 +13,7 @@ With LastPharmacyDispenseDate AS (
             CASE WHEN ExpectedReturn IS NULL THEN DATEADD(dd,30,DispenseDate) ELSE ExpectedReturn End AS ExpectedReturn,
             cast(getdate() as date) as LoadDate
     FROM ODS.dbo.CT_PatientPharmacy
+    WHERE  VOIDED=0
 )
 Select LastPharmacyDispenseDate.*
 INTO [ODS].[dbo].[Intermediate_LastPharmacyDispenseDate]

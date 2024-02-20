@@ -29,6 +29,7 @@
         <module>Load Intermediate Prep Refills</module>
         <module>Load Intermediate Latest Prep Assessments</module>
         <module>Load Intermediate latest Obs</module>
+        <module>Load Intermediate PBFW</module>
     </modules>
 
     <dependencyManagement>

@@ -1,7 +1,6 @@
 IF OBJECT_ID(N'[ODS].[dbo].[intermediate_LatestObs]', N'U') IS NOT NULL
 DROP TABLE [ODS].[dbo].[intermediate_LatestObs];
 
-
 BEGIN
 with MFL_partner_agency_combination as (
     select
@@ -27,6 +26,7 @@ with MFL_partner_agency_combination as (
          from ODS.dbo.CT_Patient as patient
                   left join ODS.dbo.Intermediate_LastPatientEncounter as last_encounter on last_encounter.PatientPK = patient.PatientPK
              and last_encounter.SiteCode = patient.SiteCode
+         WHERE patient.VOIDED=0
      ),
      latest_adherence as (
          select
@@ -40,6 +40,7 @@ with MFL_partner_agency_combination as (
              and visits.VisitDate = last_visit.LastVisitDate
              and visits.VisitID = last_visit.visitID
              and AdherenceCategory in ('ARVAdherence', 'ART','ART|CTX','ARV','ARV Adherence')
+         WHERE  VISITS.VOIDED=0
      ),
      latest_differentiated_care as (
          select
@@ -51,7 +52,7 @@ with MFL_partner_agency_combination as (
              and visits.PatientPK = last_visit.PatientPK
              and visits.VisitDate = last_visit.LastVisitDate
              and visits.VisitID = last_visit.visitID
-         where DifferentiatedCare is not null
+         where DifferentiatedCare is not null AND  VISITS.VOIDED=0
      ),
      latest_mmd as (
          select
@@ -74,6 +75,7 @@ with MFL_partner_agency_combination as (
              and visits.PatientPK = last_visit.PatientPK
              and visits.VisitDate = last_visit.LastVisitDate
              and visits.VisitID = last_visit.visitID
+         WHERE  VISITS.VOIDED=0
      ),
      latest_pregnancy as (
          select
@@ -86,6 +88,7 @@ with MFL_partner_agency_combination as (
              and visits.VisitDate = last_visit.LastVisitDate
              and visits.VisitID = last_visit.visitID
              and Pregnant is not null
+         WHERE  VISITS.VOIDED=0
      ),
      latest_fp_method as (
          select
@@ -99,6 +102,7 @@ with MFL_partner_agency_combination as (
              and visits.VisitID = last_visit.visitID
              and FamilyPlanningMethod is not null
              and FamilyPlanningMethod <> ''
+         WHERE  VISITS.VOIDED=0
      ),
 
      latest_breastfeeding as (
@@ -115,6 +119,7 @@ with MFL_partner_agency_combination as (
              and visits.VisitID = last_visit.visitID
              and Breastfeeding is not null
              and Breastfeeding <> ''
+         WHERE  VISITS.VOIDED=0
      ),
      latest_Who as (
          select
@@ -126,13 +131,35 @@ with MFL_partner_agency_combination as (
              and visits.PatientPK = last_visit.PatientPK
              and visits.VisitDate = last_visit.LastVisitDate
              and visits.VisitID = last_visit.visitID
-     )
+         WHERE  VISITS.VOIDED=0
+     ),
+     last_TBScreening as (
 
+         SELECT  row_number() OVER (PARTITION BY visits.SiteCode,visits.PatientPK ORDER BY VisitDate DESC) AS NUM,
+                 visits.PatientPK,
+                 visits.TBScreening,
+                 visits.SiteCode,
+                 visits.VisitDate,
+                 visits.VisitID
+         from ODS.dbo.CT_IPT as visits
+         WHERE  VISITS.VOIDED=0
+     ),
+     latest_TBScreening as (
+         select
+             distinct Screening.PatientPK,
+                      Screening.TBScreening,
+                      Screening.SiteCode
+         from last_TBScreening as Screening
+                  inner join ODS.dbo.Intermediate_LastVisitDate as last_visit on Screening.SiteCode = last_visit.SiteCode
+             and Screening.PatientPK = last_visit.PatientPK
+             and Screening.VisitDate = last_visit.LastVisitDate
+             and Screening.VisitID = last_visit.visitID
+         where 	Screening.NUM=1
+     )
 select
     patient.PatientPKHash,
     patient.PatientPK,
     patient.SiteCode,
-    --patient.PatientID,
     latest_weight_height.LatestHeight,
     latest_weight_height.LatestWeight,
     age_of_last_visit.AgeLastVisit,
@@ -145,6 +172,7 @@ select
     latest_breastfeeding.LMP,
     latest_breastfeeding.GestationAge,
     latest_Who.WhoStage,
+    latest_TBScreening.TBScreening,
     cast(getdate() as date) as LoadDate
 into ODS.dbo.intermediate_LatestObs
 from ODS.dbo.CT_Patient as patient
@@ -167,5 +195,6 @@ from ODS.dbo.CT_Patient as patient
          left join latest_breastfeeding on latest_breastfeeding.PatientPK=patient.PatientPK
     and latest_breastfeeding.Sitecode=patient.SiteCode
          left join latest_Who on latest_Who.PatientPK=patient.PatientPK and latest_Who.Sitecode=patient.Sitecode
-
+         left join latest_TBScreening on latest_TBScreening.PatientPK=patient.PatientPK and latest_TBScreening.SiteCode=patient.SiteCode
+Where patient.voided = 0
 END
