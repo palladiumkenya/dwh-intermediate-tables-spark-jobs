@@ -30,6 +30,8 @@
         <module>Load Intermediate Latest Prep Assessments</module>
         <module>Load Intermediate latest Obs</module>
         <module>Load Intermediate PBFW</module>
+        <module>Load Intermediate Viral Loads Intervals</module>
+        <module>Load Intermediate Latest Diabetes Tests</module>
     </modules>
 
     <dependencyManagement>
